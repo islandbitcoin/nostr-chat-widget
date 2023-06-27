@@ -7,14 +7,15 @@
     export let chatStarted;
     export let chatConfiguration;
     export let relays;
+    export let toggleChat;
 
     $: chatStarted = !!$chatAdapter
 </script>
 
 {#if !chatStarted}
-    <KeyPrompt {websiteOwnerPubkey} {chatConfiguration} {relays} />
+    <KeyPrompt toggleChat={toggleChat} {websiteOwnerPubkey} {chatConfiguration} {relays} />
 {:else}
-    <ConnectedWidget {websiteOwnerPubkey} {chatConfiguration} {relays} />
+    <ConnectedWidget toggleChat={toggleChat} {websiteOwnerPubkey} {chatConfiguration} {relays} />
 {/if}
 
 <style>

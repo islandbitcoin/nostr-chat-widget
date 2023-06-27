@@ -12,6 +12,7 @@
     export let websiteOwnerPubkey;
     export let chatConfiguration;
     let prevChatConfiguration;
+    export let toggleChat;
 
     $: {
         if (chatConfiguration !== prevChatConfiguration && $chatAdapter) {
@@ -41,39 +42,43 @@
 
     async function sendMessage() {
         const input = document.getElementById('message-input');
-        const message = input.value;
-        input.value = '';
-        let extraParams = { tags: [], tagPubKeys: [] };
+        if (input.value === "" || input.value === " ") {
 
-        // if this is the rootLevel we want to tag the owner of the site's pubkey
-        if (!rootNoteId && websiteOwnerPubkey) { extraParams.tagPubKeys = [websiteOwnerPubkey] }
+        } else {
+            const message = input.value;
+            input.value = '';
+            let extraParams = { tags: [], tagPubKeys: [] };
 
-        // if we are responding to an event, we want to tag the event and the pubkey
-        if ($selectedMessage) {
-            extraParams.tags.push(['e', $selectedMessage, "wss://nos.lol", "root"]);
-            extraParams.tagPubKeys.push(getEventById($selectedMessage).pubkey);
-        }
+            // if this is the rootLevel we want to tag the owner of the site's pubkey
+            if (!rootNoteId && websiteOwnerPubkey) { extraParams.tagPubKeys = [websiteOwnerPubkey] }
 
-        // if (rootNoteId) {
-        //     // mark it as a response to the most recent event
-        //     const mostRecentEvent = events[events.length - 1];
-        //     // go through all the tags and add them to the new message
-        //     if (mostRecentEvent) {
-        //         mostRecentEvent.tags.forEach(tag => {
-        //             if (tag[0] === 'e') {
-        //                 extraParams.tags.push(tag);
-        //             }
-        //         })
-        //         extraParams.tags.push(['e', mostRecentEvent.id]);
-        //         extraParams.tags.push(['p', mostRecentEvent.pubkey]);
-        //     }
-        // }
+            // if we are responding to an event, we want to tag the event and the pubkey
+            if ($selectedMessage) {
+                extraParams.tags.push(['e', $selectedMessage, "wss://nos.lol", "root"]);
+                extraParams.tagPubKeys.push(getEventById($selectedMessage).pubkey);
+            }
 
-        const noteId = await $chatAdapter.send(message, extraParams);
+            // if (rootNoteId) {
+            //     // mark it as a response to the most recent event
+            //     const mostRecentEvent = events[events.length - 1];
+            //     // go through all the tags and add them to the new message
+            //     if (mostRecentEvent) {
+            //         mostRecentEvent.tags.forEach(tag => {
+            //             if (tag[0] === 'e') {
+            //                 extraParams.tags.push(tag);
+            //             }
+            //         })
+            //         extraParams.tags.push(['e', mostRecentEvent.id]);
+            //         extraParams.tags.push(['p', mostRecentEvent.pubkey]);
+            //     }
+            // }
 
-        if (!rootNoteId) {
-            rootNoteId = noteId;
-            localStorage.setItem('rootNoteId', rootNoteId);
+            const noteId = await $chatAdapter.send(message, extraParams);
+
+            if (!rootNoteId) {
+                rootNoteId = noteId;
+                localStorage.setItem('rootNoteId', rootNoteId);
+            }
         }
     }
 
@@ -246,7 +251,35 @@
 
 </script>
 
-<div class="
+<div class="flex justify-between items-center p-4 bg-purple-800 text-white rounded-t-md">
+    <h3 class="m-0 text-lg">
+        {#if $chatAdapter?.pubkey}
+            {ownName}
+        {/if}
+    </h3>
+    <button id="close-popup" on:click={toggleChat} class="bg-transparent border-none text-white cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="--darkreader-inline-stroke: currentColor;" data-darkreader-inline-stroke=""><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+    </button>
+</div>
+
+{#if channelMetadata.name}
+<div class="flex items-center p-4 bg-zinc-300">
+    <!--<div class="flex flex-row gap-2 mb-3 bg-zinc-300 text-zinc-800 px-4 py-2 -mx-4 -mt-3">-->
+        {#if channelMetadata.picture}
+            <img src={channelMetadata.picture} class="w-12 h-12 rounded-full mr-2" />
+        {/if}
+
+        <div class="flex flex-col">
+            <div class="font-extrabold text-xl">{channelMetadata.name}</div>
+            {#if channelMetadata.about}
+                <div class="text-sm truncate font-regular">{channelMetadata.about}</div>
+            {/if}
+        </div>
+    <!--</div>-->
+</div>
+{/if}
+
+<!--<div class="
     bg-purple-700 text-white
     -mx-4 -mt-5 mb-3
     px-4 py-3
@@ -274,24 +307,11 @@
 
         {connectedRelays}/{totalRelays} relays
     </span>
-</div>
+</div>-->
 
-{#if channelMetadata.name}
-    <div class="flex flex-row gap-2 mb-3 bg-zinc-300 text-zinc-800 px-4 py-2 -mx-4 -mt-3">
-        {#if channelMetadata.picture}
-            <img src={channelMetadata.picture} class="w-12 h-12 rounded-full" />
-        {/if}
+<div id="chat-messages" class="flex-1 px-4 overflow-y-auto">
 
-        <div class="flex flex-col">
-            <div class="font-extrabold text-xl">{channelMetadata.name}</div>
-            {#if channelMetadata.about}
-                <div class="text-sm truncate font-regular">{channelMetadata.about}</div>
-            {/if}
-        </div>
-    </div>
-{/if}
-
-{#if $selectedMessage}
+    {#if $selectedMessage}
     {#if !getEventById($selectedMessage)}
         <h1>Couldn't find event with ID {$selectedMessage}</h1>
     {:else}
@@ -309,63 +329,53 @@
         </div>
     </div>
     {/if}
-{/if}
+    {/if}
 
-<div id="messages-container" class="overflow-auto -mx-4 px-4" style="height: 50vh; min-height: 300px;">
-    <div id="messages-container-inner" class="flex flex-col gap-4">
-        {#if $selectedMessage}
-            <NostrNote event={getEventById($selectedMessage)} {responses} {websiteOwnerPubkey} />
-        {:else}
-            {#each events as event}
-                <NostrNote {event} {responses} {websiteOwnerPubkey} />
-                {#if event.deleted}
-                    👆 deleted
-                {/if}
-            {/each}
-        {/if}
+    <div id="messages-container" class="overflow-auto -mx-4 px-4 min-h-full h-full">
+        <div id="messages-container-inner" class="flex flex-col gap-4">
+            {#if $selectedMessage}
+                <NostrNote event={getEventById($selectedMessage)} {responses} {websiteOwnerPubkey} />
+            {:else}
+                {#each events as event}
+                    <NostrNote {event} {responses} {websiteOwnerPubkey} />
+                    {#if event.deleted}
+                        👆 deleted
+                    {/if}
+                {/each}
+            {/if}
+        </div>
     </div>
 </div>
 
-
-<div class="flex flex-col">
-    <div class="
-        border-y border-y-slate-200
-        -mx-4 my-2 bg-slate-100 text-black text-sm
-        px-4 py-2
-    ">
-        {#if chatConfiguration.chatType === 'DM'}
-            <b>Encrypted chat:</b>
-            only your chat partner can see these messages.
-        {:else if chatConfiguration.chatType === 'GROUP'}
-            <b>Public chat:</b>
-            anyone can see these messages.
-        {:else}
-            <b>Public notes:</b>
-            your followers see your messages on their timeline
-        {/if}
-    </div>
-
-    <div class="flex flex-row gap-2 -mx-1">
-        <textarea
-            type="text"
-            id="message-input"
-            class="
-                -mb-2
-                p-2
-                w-full
-                resize-none
-                rounded-xl
-                text-gray-600
-                border
-            " placeholder="Say hello!"
-            rows=1
-            on:keydown={inputKeyDown}
-        ></textarea>
-        <button type="button" class="inline-flex items-center rounded-full border border-transparent bg-purple-700 p-3 text-white shadow-sm hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2" on:click|preventDefault={sendMessage}>
-            <!-- Heroicon name: outline/plus -->
-            <svg aria-hidden="true" class="w-6 h-6 rotate-90" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path></svg>
-        </button>
-    </div>
+<div id="chat-input-container" class="pb-4 px-4">
+    <div class="flex flex-col">
+        <div class="border-y border-y-slate-200 -mx-4 mb-2 bg-slate-100 text-black text-sm px-4 py-2">
+            {#if chatConfiguration.chatType === 'DM'}
+                <b>Encrypted chat:</b>
+                only your chat partner can see these messages.
+            {:else if chatConfiguration.chatType === 'GROUP'}
+                <b>Public chat:</b>
+                anyone can see these messages.
+            {:else}
+                <b>Public notes:</b>
+                your followers see your messages on their timeline
+            {/if}
+        </div>
+    
+        <div class="flex flex-row gap-2 -mx-1">
+            <textarea
+                type="text"
+                id="message-input"
+                class="-mb-2 p-2 w-full resize-none rounded-xl text-gray-600 border" placeholder="Say hello!"
+                rows=1
+                on:keydown={inputKeyDown}
+            ></textarea>
+            <button type="button" class="inline-flex items-center rounded-full border border-transparent bg-purple-700 p-3 text-white shadow-sm hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2" on:click|preventDefault={sendMessage}>
+                <!-- Heroicon name: outline/plus -->
+                <svg aria-hidden="true" class="w-6 h-6 rotate-90" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path></svg>
+            </button>
+        </div>
+    </div>    
 </div>
 
 <style>

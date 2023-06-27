@@ -9,6 +9,7 @@
     export let websiteOwnerPubkey;
     export let chatConfiguration;
     export let relays;
+    export let toggleChat;
 
     let hasNostrNip07 = true;
     let publicKey = null;
@@ -106,46 +107,65 @@
     }
 </script>
 
-<h1 class="font-bold text-xl mb-3">
-    How would you like to connect?
-</h1>
-
-{#if publicKey}
-    <p class="text-gray-400 mb-3 font-bold">
-        Nostr Connect is a WIP, not fully implemented yet!
-    </p>
-
-    <p class="text-gray-400 mb-3">
-        You are currently connected with the following public key:
-        <span>{publicKey}</span>
-    </p>
-{/if}
-
-{#if nip46URI}
-    <p class="text-gray-600 mb-3">
-        Scan this with your Nostr Connect (click to copy to clipboard)
-    </p>
-
-    <div class="bg-white w-full p-3"
-        on:click|preventDefault={Nip46Copy}>
-        <!-- <QR text={nip46URI} /> -->
-    </div>
-
-    <button class="
-        bg-purple-900
-        hover:bg-purple-700
-        w-full
-        p-2
-        rounded-xl
-        text-center
-        font-regular
-        text-white
-    " on:click|preventDefault={() => { nip46URI = null; }}>
-        Cancel
+<div class="flex justify-between items-center p-4 bg-purple-800 text-white rounded-t-md">
+    <h3 class="m-0 text-lg">How whould you like to connect?</h3>
+    <button id="close-popup" on:click={toggleChat} class="bg-transparent border-none text-white cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="--darkreader-inline-stroke: currentColor;" data-darkreader-inline-stroke=""><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
     </button>
-{:else if !publicKey}
-    <div class="flex flex-col gap-1">
-        {#if hasNostrNip07}
+</div>
+
+<div class="flex-1 p-4 overflow-y-auto">
+    {#if publicKey}
+        <p class="text-gray-400 mb-3 font-bold">
+            Nostr Connect is a WIP, not fully implemented yet!
+        </p>
+    
+        <p class="text-gray-400 mb-3">
+            You are currently connected with the following public key:
+            <span>{publicKey}</span>
+        </p>
+    {/if}
+    
+    {#if nip46URI}
+        <p class="text-gray-600 mb-3">
+            Scan this with your Nostr Connect (click to copy to clipboard)
+        </p>
+    
+        <div class="bg-white w-full p-3"
+            on:click|preventDefault={Nip46Copy}>
+            <!-- <QR text={nip46URI} /> -->
+        </div>
+    
+        <button class="
+            bg-purple-900
+            hover:bg-purple-700
+            w-full
+            p-2
+            rounded-xl
+            text-center
+            font-regular
+            text-white
+        " on:click|preventDefault={() => { nip46URI = null; }}>
+            Cancel
+        </button>
+    {:else if !publicKey}
+        <div class="flex flex-col gap-1">
+            {#if hasNostrNip07}
+                <button class="
+                    bg-purple-900
+                    hover:bg-purple-700
+                    w-full
+                    p-4
+                    rounded-xl
+                    text-center
+                    font-regular
+                    text-gray-200
+                " on:click|preventDefault={useNip07}>
+                    Browser Extension (NIP-07)
+                </button>
+            {/if}
+    
+    
             <button class="
                 bg-purple-900
                 hover:bg-purple-700
@@ -155,42 +175,28 @@
                 text-center
                 font-regular
                 text-gray-200
-            " on:click|preventDefault={useNip07}>
-                Browser Extension (NIP-07)
+            " on:click|preventDefault={useNip46}>
+                Nostr Connect (NIP-46)
             </button>
-        {/if}
-
-
-        <button class="
-            bg-purple-900
-            hover:bg-purple-700
-            w-full
-            p-4
-            rounded-xl
-            text-center
-            font-regular
-            text-gray-200
-        " on:click|preventDefault={useNip46}>
-            Nostr Connect (NIP-46)
-        </button>
-
-        <button class="
-            bg-purple-900
-            hover:bg-purple-700
-            w-full
-            p-4
-            rounded-xl
-            text-center
-            font-regular
-            text-gray-200
-        " on:click|preventDefault={useDiscardableKeys}>
-            Anonymous
-            <span class="text-xs text-gray-300">
-                (Ephemeral Keys)
-            </span>
-        </button>
-    </div>
-{/if}
+    
+            <button class="
+                bg-purple-900
+                hover:bg-purple-700
+                w-full
+                p-4
+                rounded-xl
+                text-center
+                font-regular
+                text-gray-200
+            " on:click|preventDefault={useDiscardableKeys}>
+                Anonymous
+                <span class="text-xs text-gray-300">
+                    (Ephemeral Keys)
+                </span>
+            </button>
+        </div>
+    {/if}    
+</div>
 
 <style>
 	@tailwind base;
