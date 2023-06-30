@@ -350,7 +350,7 @@
     {#if !getEventById($selectedMessage)}
       <h1>Couldn't find event with ID {$selectedMessage}</h1>
     {:else}
-      <div class="flex flex-row px-2 py-4 mb-3 overflow-y-hidden overflow-x-hidden">
+      <div class="hidden md:flex flex-row px-2 py-4 mb-3 overflow-x-hidden">
         <div class="flex flex-col ml-2">
           <button on:click|preventDefault={selectParent}>
             <svg
@@ -382,8 +382,27 @@
     id="messages-container"
     class="overflow-auto overflow-x-hidden -mx-4 px-4 min-h-full h-full"
   >
+  
     <div id="messages-container-inner" class="flex flex-col gap-4">
       {#if $selectedMessage}
+      <div class="md:hidden px-2 py-4 mb-3">
+        <button class="" on:click|preventDefault={selectParent}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="w-6 h-6"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M19.5 12h-15m0 0l6.75 6.75M4.5 12l6.75-6.75"
+              />
+            </svg>
+          </button>
+      </div>
         <NostrNote
           event={getEventById($selectedMessage)}
           {responses}

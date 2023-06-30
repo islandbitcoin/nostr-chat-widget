@@ -94,7 +94,7 @@
 
   #_chat-popup {
     z-index: 996;
-    min-height: 650px;
+    min-height: 600px;
     max-height: 70vh;
     transition: all 0.3s;
     overflow: hidden;
